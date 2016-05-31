@@ -1,1 +1,3 @@
 nimcache/
+asyncredis
+asyncredis_test
