@@ -1,12 +1,13 @@
 import asyncdispatch
 import asyncredis
 import strutils
+import tables
 import unittest
 
-suite "Async Redis Client testing":
+let ar = newAsyncRedis("localhost")
+discard waitFor(ar.connect())
 
-    setup:
-        let ar = newAsyncRedis("localhost")
+suite "Async Redis Client testing":
 
     test "Test constructor":
         check(ar != nil)
@@ -35,6 +36,9 @@ suite "Async Redis Client testing":
         check(waitFor(ar.SET("hello", "world")))
         check(waitFor(ar.BITCOUNT("hello")) == 23)
         check(waitFor(ar.BITCOUNT("hello", 1, 1)) == 6)
+
+    test "COMMAND: INFO":
+        check(waitFor(ar.INFO()).hasKey("redis_version"))
 
     test "Command: PING":
         check(waitFor(ar.PING())== true)
