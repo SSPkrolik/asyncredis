@@ -23,7 +23,7 @@ TODO
 | BGSAVE         | :white_check_mark: |                   |
 | BITCOUNT       | :white_check_mark: |                   |
 | BITFIELD       | :red_circle:       |                   |
-| BITOP          | :red_circle:       |                   |
+| BITOP          | :white_check_mark: |                   |
 | BITPOS         | :red_circle:       |                   |
 | BLPOP          | :red_circle:       |                   |
 | BRPOP          | :red_circle:       |                   |

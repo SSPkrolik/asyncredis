@@ -50,6 +50,20 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             discard
 
+    test "COMMAND: BITOP":
+        discard waitFor(ar.SET("x", "x"))
+        discard waitFor(ar.SET("y", "y"))
+        try:
+            check(waitFor(ar.BITOP(BitOperation.AND, "z", @["x", "y"])) == 1)
+            check(waitFor(ar.BITOP(BitOperation.OR, "z", @["x", "y"])) == 1)
+            check(waitFor(ar.BITOP(BitOperation.XOR, "z", @["x", "y"])) == 1)
+            check(waitFor(ar.BITOP(BitOperation.NOT, "z", @["x"])) == 1)
+
+            expect AssertionError:
+                check(waitFor(ar.BITOP(BitOperation.NOT, "z", @["x", "y"])) == 1)
+        except UnsupportedError:
+            discard
+
     test "COMMAND: CLIENT GETNAME":
         try:
             check(waitFor(ar.CLIENT_GETNAME()) == nil)

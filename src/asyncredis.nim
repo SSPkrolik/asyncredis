@@ -24,6 +24,12 @@ type
         X86    = 0
         X86_64 = 1
 
+    BitOperation* {.pure.} = enum
+        AND
+        OR
+        XOR
+        NOT
+
     CommunicationError* = object of Exception
         ## Raises on communication problems with MongoDB server
 
@@ -266,11 +272,25 @@ proc BITCOUNT*(ar: AsyncRedis, key: string, indexStart: int = 0, indexEnd: int =
     ls.inuse = false
     return parseInt(data[1 .. ^1])
 
-proc BITFIELD*(ar: AsyncRedis): Future[string] {.async.} =
-    ##
-
 # proc BITFIELD
-# proc BITOP
+
+proc BITOP*(ar: AsyncRedis, operation: BitOperation, dest: string, keys: seq[string]): Future[int64] {.async.} =
+    ## Perform bitwise operation between `keys` and write result into `destination` key
+    since((2, 6, 0))
+    if operation == BitOperation.Not:
+        doAssert(keys.len() == 1)
+
+    let ls = await ar.next()
+    var command: string = "*$#\r\n$$5\r\nBITOP\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(keys.len() + 3, ($operation).len(), $operation, dest.len(), dest)
+    for key in keys: command &= "$$$#\r\n$#\r\n".format(key.len(), key)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
 # proc BITPOS
 # proc BLPOP
 # proc BRPOP
