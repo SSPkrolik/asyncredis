@@ -89,6 +89,12 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             discard
 
+    test "COMMAND: CLIENT PAUSE":
+        try:
+            check(waitFor(ar.CLIENT_PAUSE(0)).success)
+        except UnsupportedError:
+            discard
+
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
 

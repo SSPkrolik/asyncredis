@@ -377,7 +377,24 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
         let line = dataStream.readLine().string
         result.add(line)
 
-# CLIENT PAUSE
+proc CLIENT_PAUSE*(ar: AsyncRedis, timeout: uint): Future[StringStatusReply] {.async.} =
+    ## Pauses all clients for certain amout of time specified in seconds
+    since((2, 9, 50))
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nCLIENT\r\n$$5\r\nPAUSE\r\n$$$#\r\n$#\r\n".format(($timeout).len(), $timeout)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data == rpOk:
+        return (true, nil)
+    else:
+        return (false, data)
+
 # CLIENT REPLY
 # CLIENT SETNAME
 
