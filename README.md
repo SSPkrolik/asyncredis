@@ -33,8 +33,7 @@ TODO
 | DEL            | :white_check_mark: |                   |
 | DUMP           | :white_check_mark: |                   |
 | ECHO           | :white_check_mark: |                   |
-| FLUSHALL       | :white_check_mark: |                   |
-| FLUSHDB        | :white_check_mark: |                   |
+| FLUSHALL, FLUSHDB | :white_check_mark: |                   |
 | GET            | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |
 | SET            | :white_check_mark: | No TTL            |
