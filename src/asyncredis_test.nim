@@ -13,7 +13,10 @@ suite "Async Redis Client testing":
         check(ar != nil)
 
     test "COMMAND: APPEND":
-        check(waitFor(ar.APPEND("string", "world")) mod 5 == 0)
+        try:
+            check(waitFor(ar.APPEND("string", "world")) mod 5 == 0)
+        except UnsupportedError:
+            discard
 
     test "COMMAND: AUTH":
         check(waitFor(ar.AUTH("super-password")).success == false)
@@ -33,9 +36,12 @@ suite "Async Redis Client testing":
             check(resp.success)
 
     test "COMMAND: BITCOUNT":
-        check(waitFor(ar.SET("hello", "world")))
-        check(waitFor(ar.BITCOUNT("hello")) == 23)
-        check(waitFor(ar.BITCOUNT("hello", 1, 1)) == 6)
+        try:
+            check(waitFor(ar.SET("hello", "world")))
+            check(waitFor(ar.BITCOUNT("hello")) == 23)
+            check(waitFor(ar.BITCOUNT("hello", 1, 1)) == 6)
+        except UnsupportedError:
+            discard
 
     test "COMMAND: INFO":
         check(waitFor(ar.INFO()).hasKey("redis_version"))
