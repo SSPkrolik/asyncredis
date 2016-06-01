@@ -19,6 +19,8 @@ const
     ttlDoesNotExist* = -2  ## TTL for non-existing key
     ttlInfinite*     = -1  ## TTL for key without expiration time
 
+    reString*  = "embstr"  ## Redis encoding for strings
+
 type
     Architecture* {.pure.} = enum
         ## Returned within INFO command reply
@@ -37,6 +39,14 @@ type
         ON    ## Server always replies
         OFF   ## Server do not reply
         SKIP  ## Server do not reply immediately
+
+    ObjectDebugInfo* = object
+        address*:        string
+        refcount*:       int
+        encoding*:       string
+        serializedLen*:  int
+        lru*:            int
+        lruSecondsIdle*: int
 
     CommunicationError* = object of Exception
         ## Raises on communication problems with MongoDB server
@@ -463,7 +473,6 @@ proc CLIENT_SETNAME*(ar: AsyncRedis, name: string): Future[StringStatusReply] {.
 # CLUSTER SLOTS
 
 # COMMAND
-# COMMAND COUNT
 
 proc COMMAND_COUNT*(ar: AsyncRedis): Future[int64] {.async.} =
     ## Returns number of supported commands by connected Redis server
@@ -501,6 +510,37 @@ proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
     return parseInt(data[1 .. ^1])
 
 # DEBUG OBJECT
+
+proc DEBUG_OBJECT*(ar: AsyncRedis, key: string): Future[ObjectDebugInfo] {.async.} =
+    ## Returns inner Redis debug info for object
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$5\r\nDEBUG\r\n$$6\r\nOBJECT\r\n$$$#\r\n$#\r\n".format(key.len(), key)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    let lines = data[0 .. ^3].split(" ")[1 .. ^1]
+    result = ObjectDebugInfo()
+    for line in lines:
+        let pair = line.split(":")
+        case pair[0]
+        of "at":
+            result.address = pair[1]
+        of "refcount":
+            result.refcount = parseInt(pair[1])
+        of "encoding":
+            result.encoding = pair[1]
+        of "serializedlength":
+            result.serializedLen = parseInt(pair[1])
+        of "lru":
+            result.lru = parseInt(pair[1])
+        else:
+            discard
+
 # DEBUG SEGFAULT
 
 # DECR

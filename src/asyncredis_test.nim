@@ -121,6 +121,12 @@ suite "Async Redis Client testing":
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
 
+    test "COMMAND: DEBUG OBJECT":
+        let ob = waitFor(ar.DEBUG_OBJECT("hello"))
+        check(ob.lru > 0)
+        check(ob.refcount > 0)
+        check(ob.address.startsWith("0x"))
+
     test "COMMAND: DEL":
         check(waitFor(ar.DEL("non-existing-key")) == 0)
         check(waitFor(ar.DEL(@["nxk1", "nxk2"])) == 0)
