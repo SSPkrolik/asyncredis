@@ -35,6 +35,7 @@ TODO
 | CLIENT REPLY   | :red_circle:       |                   |
 | CLIENT SETNAME | :red_circle:       |                   |
 | DBSIZE         | :white_check_mark: |                   |
+| DEL            | :white_check_mark: |                   |
 | ECHO           | :white_check_mark: |                   |
 | GET            | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |

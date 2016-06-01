@@ -375,10 +375,27 @@ proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
 
 # DECR
 # DECRBY
-# DEL
+
+proc DEL*(ar: AsyncRedis, keys: seq[string]): Future[int64] {.async.} =
+    ## Remove specified keys from database
+    let ls = await ar.next()
+    var command: string = "*$#\r\n$$3\r\nDEL\r\n".format(keys.len() + 1)
+    for key in keys: command &= "$$$#\r\n$#\r\n".format(key.len(), key)
+
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
+proc DEL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
+    ## Delete single key from database
+    result = await ar.DEL(@[key])
+
 # DISCARD
 # DUMP
-# ECHO
 
 proc ECHO*(ar: AsyncRedis, message: string): Future[string] {.async.} =
     ## Push message to server and receive it from it, like ping but

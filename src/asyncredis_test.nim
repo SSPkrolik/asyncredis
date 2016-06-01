@@ -59,6 +59,13 @@ suite "Async Redis Client testing":
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
 
+    test "COMMAND: DEL":
+        try:
+            check(waitFor(ar.DEL("non-existing-key")) == 0)
+            check(waitFor(ar.DEL(@["nxk1", "nxk2"])) == 0)
+        except UnsupportedError:
+            discard
+
     test "COMMAND: ECHO":
         check(waitFor(ar.ECHO("hello")) == "hello")
 
