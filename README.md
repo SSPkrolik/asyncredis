@@ -36,6 +36,7 @@ TODO
 | CLIENT SETNAME | :red_circle:       |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |
+| DUMP           | :white_check_mark: |                   |
 | ECHO           | :white_check_mark: |                   |
 | FLUSHALL       | :white_check_mark: |                   |
 | FLUSHDB        | :white_check_mark: |                   |

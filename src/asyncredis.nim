@@ -395,7 +395,23 @@ proc DEL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
     result = await ar.DEL(@[key])
 
 # DISCARD
-# DUMP
+
+proc DUMP*(ar: AsyncRedis, key: string): Future[string] {.async.} =
+    ## Return value stored in key in Redis-specific serialized format
+    since((2, 6, 0))
+    let ls = await ar.next()
+    await ls.sock.send("*2\r\n$$4\r\nDUMP\r\n$$$#\r\n$#\r\n".format(key.len(), key))
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    let strlen = parseInt(data[1 .. ^1])
+    data = await ls.sock.recv(strlen + 2)
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return data[0 .. ^3]
+
 
 proc ECHO*(ar: AsyncRedis, message: string): Future[string] {.async.} =
     ## Push message to server and receive it from it, like ping but
@@ -413,7 +429,6 @@ proc ECHO*(ar: AsyncRedis, message: string): Future[string] {.async.} =
     handleDisconnect(data, ls)
 
     ls.inuse = false
-
     return data[0 .. ^3]
 
 # EVAL
