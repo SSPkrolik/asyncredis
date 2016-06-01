@@ -8,32 +8,35 @@ import tables
 import times
 
 const
-    rpNull    = "$-1"  # Redis Protocol NULL string value
-    rpOk      = "+OK"  # Redis Protocol `simple string` successfull reply
-    rpInt     = ":"    # Redis Protocol integer reply marker
-    rpErr     = "-ERR" # Redis Protocol error reply marker
-    rpSuccess = "+"    # Redis Protocol marker for successful command execution
-    rpBulk    = "*"    # Redis Protocol marker for bulk string reply
-    rpNewLine = "\r\n" # Redis Protocol new-line marker
+    rpNull    = "$-1"   # Redis Protocol NULL string value
+    rpOk      = "+OK"   # Redis Protocol `simple string` successfull reply
+    rpInt     = ":"     # Redis Protocol integer reply marker
+    rpErr     = "-ERR"  # Redis Protocol error reply marker
+    rpSuccess = "+"     # Redis Protocol marker for successful command execution
+    rpBulk    = "*"     # Redis Protocol marker for bulk string reply
+    rpNewLine = "\r\n"  # Redis Protocol new-line marker
 
     ttlDoesNotExist* = -2  ## TTL for non-existing key
-    ttlInfinite* = -1      ## TTL for key without expiration time
+    ttlInfinite*     = -1  ## TTL for key without expiration time
 
 type
     Architecture* {.pure.} = enum
+        ## Returned within INFO command reply
         X86    = 0
         X86_64 = 1
 
     BitOperation* {.pure.} = enum
+        ## Used by BITOP command
         AND
         OR
         XOR
         NOT
 
     ReplyMode* {.pure.} = enum
-        ON
-        OFF
-        SKIP
+        ## Can be set using CLIENT REPLY command
+        ON    ## Server always replies
+        OFF   ## Server do not reply
+        SKIP  ## Server do not reply immediately
 
     CommunicationError* = object of Exception
         ## Raises on communication problems with MongoDB server
@@ -49,8 +52,10 @@ type
         sock:          AsyncSocket
 
     RedisVersion* = tuple[major: int, minor: int, micro: int]
+        ## Version of Redis server returned within INFO command reply
 
     AsyncRedis* = ref object of RootObj
+        ## Asynchronous Redis client
         host:     string
         port:     Port
 
@@ -64,7 +69,6 @@ type
 
         infocached: bool
         version:    RedisVersion
-
 
     StringStatusReply* = tuple[success: bool, message: string]
         ## This reply consists of first field indication success or failure
@@ -327,8 +331,6 @@ proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} =
 
     ls.inuse = false
     result = data[0 .. ^3]
-
-# proc CLIENT_KILL
 
 proc CLIENT_KILL*(ar: AsyncRedis, address: string, port: uint16): Future[StringStatusReply] {.async.} =
     ## Old method (prior to Redis 2.8.11) to disconnect clients from server
