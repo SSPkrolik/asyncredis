@@ -29,7 +29,7 @@ TODO
 | BRPOP          | :red_circle:       |                   |
 | BRPOPLPUSH     | :red_circle:       |                   |
 | CLIENT GETNAME | :white_check_mark: |                   |
-| CLIENT KILL    | :red_circle:       |                   |
+| CLIENT KILL    | :white_check_mark: |                   |
 | CLIENT LIST    | :white_check_mark: |                   |
 | CLIENT PAUSE   | :red_circle:       |                   |
 | CLIENT REPLY   | :red_circle:       |                   |

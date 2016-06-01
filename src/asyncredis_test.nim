@@ -70,6 +70,19 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             discard
 
+    test "COMMAND: CLIENT KILL (old version)":
+        try:
+            check(waitFor(ar.CLIENT_KILL("localhost", 2999'u16)).success == false)
+        except UnsupportedError:
+            discard
+
+    test "COMMAND: CLIENT KILL (new version)":
+        try:
+            let filter = newTable({"SKIPME": "yes", "TYPE": "slave"})
+            check(waitFor(ar.CLIENT_KILL(filter)) == 0)
+        except UnsupportedError:
+            discard
+
     test "COMMAND: CLIENT LIST":
         try:
             check(waitFor(ar.CLIENT_LIST()).len() >= 1)

@@ -321,6 +321,39 @@ proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} =
 
 # proc CLIENT_KILL
 
+proc CLIENT_KILL*(ar: AsyncRedis, address: string, port: uint16): Future[StringStatusReply] {.async.} =
+    ## Old method (prior to Redis 2.8.11) to disconnect clients from server
+    since((2, 4, 0))
+    let
+        ls = await ar.next()
+        target = "$#:$#".format(address, port)
+        command = "*3\r\n$$6\r\nCLIENT\r\n$$4\r\nKILL\r\n$$$#\r\n$#\r\n".format(target.len(), target)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    if data == rpOk:
+        return (true, nil)
+    else:
+        return (false, data)
+
+proc CLIENT_KILL*(ar: AsyncRedis, filters: TableRef[string, string]): Future[int64] {.async.} =
+    ## New method (since Redis 2.8.11) to disconnect clients from server
+    since((2, 8 , 11))
+    let ls = await ar.next()
+    var command = "*$#\r\n$$6\r\nCLIENT\r\n$$4\r\nKILL\r\n".format(filters.len() * 2 + 2)
+    for name, val in filters:
+        command &= "$$$#\r\n$#\r\n$$$#\r\n$#\r\b".format(name.len(), name, val.len(), val)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
 proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
     ## `CLIENT LIST` returns list of clients connected to server.
     since((2, 4, 0))
