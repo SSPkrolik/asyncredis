@@ -32,7 +32,7 @@ TODO
 | CLIENT KILL    | :white_check_mark: |                   |
 | CLIENT LIST    | :white_check_mark: |                   |
 | CLIENT PAUSE   | :white_check_mark: |                   |
-| CLIENT REPLY   | :red_circle:       |                   |
+| CLIENT REPLY   | :white_check_mark: |                   |
 | CLIENT SETNAME | :red_circle:       |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |

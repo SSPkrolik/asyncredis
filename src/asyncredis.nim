@@ -30,6 +30,11 @@ type
         XOR
         NOT
 
+    ReplyMode* {.pure.} = enum
+        ON
+        OFF
+        SKIP
+
     CommunicationError* = object of Exception
         ## Raises on communication problems with MongoDB server
 
@@ -54,6 +59,8 @@ type
 
         current: int
         pool:    seq[AsyncLockedSocket]
+
+        replyMode: ReplyMode
 
         infocached: bool
         version:    RedisVersion
@@ -127,6 +134,8 @@ proc newAsyncRedis*(host: string, port: Port = Port(6379), username: string = ni
 
     result.username = username
     result.password = password
+
+    result.replyMode = ReplyMode.ON
 
     result.pool = @[]
     for i in 0 ..< poolSize:
@@ -396,6 +405,27 @@ proc CLIENT_PAUSE*(ar: AsyncRedis, timeout: uint): Future[StringStatusReply] {.a
         return (false, data)
 
 # CLIENT REPLY
+
+proc CLIENT_REPLY*(ar: AsyncRedis, mode: ReplyMode): Future[StringStatusReply] {.async.} = 
+    ## Sets reply mode for server and current client
+    since((3, 2, 0))
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nCLIENT\r\n$$5\r\nREPLY\r\n$$$#\r\n$#\r\n".format(($mode).len(), $mode)
+    await ls.sock.send(command)
+
+    if mode == ReplyMode.ON:
+        var data: string = await ls.sock.recvLine()
+        handleDisconnect(data, ls)
+        ls.inuse = false
+        if data == rpOk:
+            return (true, nil)
+        else:
+            return (false, data)
+    else:
+        ls.inuse = false
+        return (true, nil)
+
 # CLIENT SETNAME
 
 # CLUSTER ADDSLOTS
