@@ -15,7 +15,7 @@ TODO
 
 ## Implementation Status
 
-| Command        | Status             | Notes             |
+| Command        | Status             |                   |
 |---------------:|:-------------------|:------------------|
 | APPEND         | :white_check_mark: |                   |
 | AUTH           | :white_check_mark: |                   | 
@@ -28,12 +28,7 @@ TODO
 | BLPOP          | :red_circle:       |                   |
 | BRPOP          | :red_circle:       |                   |
 | BRPOPLPUSH     | :red_circle:       |                   |
-| CLIENT GETNAME | :white_check_mark: |                   |
-| CLIENT KILL    | :white_check_mark: |                   |
-| CLIENT LIST    | :white_check_mark: |                   |
-| CLIENT PAUSE   | :white_check_mark: |                   |
-| CLIENT REPLY   | :white_check_mark: |                   |
-| CLIENT SETNAME | :white_check_mark: |                   |
+| CLIENT GETNAME, KILL, LIST, PAUSE, REPLY, SETNAME | :white_check_mark: |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |
 | DUMP           | :white_check_mark: |                   |
