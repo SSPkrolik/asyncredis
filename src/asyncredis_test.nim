@@ -102,6 +102,13 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             discard
 
+    test "COMMAND: CLIENT SETNAME":
+        try:
+            check(waitFor(ar.CLIENT_SETNAME("connection")).success)
+            check(waitFor(ar.CLIENT_GETNAME()) == "connection")
+        except UnsupportedError:
+            discard
+
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
 

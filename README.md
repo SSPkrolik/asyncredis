@@ -33,7 +33,7 @@ TODO
 | CLIENT LIST    | :white_check_mark: |                   |
 | CLIENT PAUSE   | :white_check_mark: |                   |
 | CLIENT REPLY   | :white_check_mark: |                   |
-| CLIENT SETNAME | :red_circle:       |                   |
+| CLIENT SETNAME | :white_check_mark: |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |
 | DUMP           | :white_check_mark: |                   |

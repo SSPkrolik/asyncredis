@@ -322,11 +322,11 @@ proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} =
         ls.inuse = false
         return nil
 
-    data = await ls.sock.recv(parseInt(data[1 .. ^1]))
-    ls.inuse = false
-
+    data = await ls.sock.recv(parseInt(data[1 .. ^1]) + 2)
     handleDisconnect(data, ls)
-    result = data
+
+    ls.inuse = false
+    result = data[0 .. ^3]
 
 # proc CLIENT_KILL
 
@@ -404,8 +404,6 @@ proc CLIENT_PAUSE*(ar: AsyncRedis, timeout: uint): Future[StringStatusReply] {.a
     else:
         return (false, data)
 
-# CLIENT REPLY
-
 proc CLIENT_REPLY*(ar: AsyncRedis, mode: ReplyMode): Future[StringStatusReply] {.async.} = 
     ## Sets reply mode for server and current client
     since((3, 2, 0))
@@ -426,7 +424,22 @@ proc CLIENT_REPLY*(ar: AsyncRedis, mode: ReplyMode): Future[StringStatusReply] {
         ls.inuse = false
         return (true, nil)
 
-# CLIENT SETNAME
+proc CLIENT_SETNAME*(ar: AsyncRedis, name: string): Future[StringStatusReply] {.async.} =
+    ## Sets current connection name which can be retrieved using GETNAME
+    since((2, 6, 9))
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nCLIENT\r\n$$7\r\nSETNAME\r\n$$$#\r\n$#\r\n".format(name.len(), name)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    if data == rpOk:
+        return (true, nil)
+    else:
+        return (false, data)
 
 # CLUSTER ADDSLOTS
 # CLUSTER COUNT-FAILURE-REPORTS
