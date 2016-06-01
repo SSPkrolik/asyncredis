@@ -63,13 +63,18 @@ proc `<`*(v1, v2: RedisVersion): bool =
     else:
         if v1.minor < v2.minor:
             return true
+        elif v1.minor > v2.minor:
+            return false
         else:
-            return false             
+            if v1.micro < v2.micro:
+                return true
+            else:
+                return false    
 
 proc `==`*(v1, v2: RedisVersion): bool =
     v1.major == v2.major and v1.minor == v2.minor and v1.micro == v2.micro
 
-proc `>`*(v1, v2: RedisVersion): bool =
+template `>`*(v1, v2: RedisVersion): bool =
     (not (v1 < v2)) and (not (v1 == v2))
 
 proc newAsyncLockedSocket(): AsyncLockedSocket =
@@ -264,6 +269,9 @@ proc BITCOUNT*(ar: AsyncRedis, key: string, indexStart: int = 0, indexEnd: int =
     ls.inuse = false
     return parseInt(data[1 .. ^1])
 
+proc BITFIELD*(ar: AsyncRedis): Future[string] {.async.} =
+    ##
+
 # proc BITFIELD
 # proc BITOP
 # proc BITPOS
@@ -271,6 +279,30 @@ proc BITCOUNT*(ar: AsyncRedis, key: string, indexStart: int = 0, indexEnd: int =
 # proc BRPOP
 # proc BRPOPLPUSH
 # proc CLIENT_KILL
+
+proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} = 
+    ## `CLIENT GETNAME` returns client's connection name which can
+    ## be set using `CLIENT SETNAME` command. If no name was
+    ## set, nil is returned.
+    since((2, 6, 9))
+    let
+        ls = await ar.next()
+        command = "*2\r\n$6\r\nCLIENT\r\n$7\r\nGETNAME\r\n"
+    ls.inuse = true
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    if data == rpNull:
+        ls.inuse = false
+        return nil
+
+    data = await ls.sock.recv(parseInt(data[1 .. ^1]))
+    ls.inuse = false
+
+    handleDisconnect(data, ls)
+    result = data
 
 proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
     ## `CLIENT LIST` returns list of clients connected to server.
@@ -298,7 +330,6 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
 
 # CLIENT GETNAME
 # CLIENT PAUSE
-
 
 proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     ## `GET` value from database by key

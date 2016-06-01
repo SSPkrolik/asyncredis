@@ -45,6 +45,12 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             discard
 
+    test "COMMAND: CLIENT GETNAME":
+        try:
+            check(waitFor(ar.CLIENT_GETNAME()) == nil)
+        except UnsupportedError:
+            discard
+
     test "COMMAND: CLIENT LIST":
         try:
             check(waitFor(ar.CLIENT_LIST()).len() >= 1)

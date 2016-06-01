@@ -28,9 +28,9 @@ TODO
 | BLPOP          | :red_circle:       |                   |
 | BRPOP          | :red_circle:       |                   |
 | BRPOPLPUSH     | :red_circle:       |                   |
+| CLIENT GETNAME | :white_check_mark: |                   |
 | CLIENT KILL    | :red_circle:       |                   |
 | CLIENT LIST    | :white_check_mark: |                   |
-| CLIENT GETNAME | :red_circle:       |                   |
 | CLIENT PAUSE   | :red_circle:       |                   |
 | GET            | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |
