@@ -278,7 +278,6 @@ proc BITFIELD*(ar: AsyncRedis): Future[string] {.async.} =
 # proc BLPOP
 # proc BRPOP
 # proc BRPOPLPUSH
-# proc CLIENT_KILL
 
 proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} = 
     ## `CLIENT GETNAME` returns client's connection name which can
@@ -304,6 +303,8 @@ proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} =
     handleDisconnect(data, ls)
     result = data
 
+# proc CLIENT_KILL
+
 proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
     ## `CLIENT LIST` returns list of clients connected to server.
     since((2, 4, 0))
@@ -328,8 +329,64 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
         let line = dataStream.readLine().string
         result.add(line)
 
-# CLIENT GETNAME
 # CLIENT PAUSE
+# CLIENT REPLY
+# CLIENT SETNAME
+
+# CLUSTER ADDSLOTS
+# CLUSTER COUNT-FAILURE-REPORTS
+# CLUSTER COUNTKEYSINSLOT
+# CLUSTER DELSLOTS
+# CLUSTER FAILOVER
+# CLUSTER FORGET
+# CLUSTER GETKEYSINSLOT
+# CLUSTER INFO
+# CLUSTER KEYSLOT
+# CLUSTER MEET
+# CLUSTER NODES
+# CLUSTER REPLICATE
+# CLUSTER RESET
+# CLUSTER SAVECONFIG
+# CLUSTER SET-CONFIG-EPOCH
+# ClUSTER SETSLOT
+# CLUSTER SLAVES
+# CLUSTER SLOTS
+
+# COMMAND
+# COMMAND COUNT
+# COMMAND GETKEYS
+# COMMAND INFO
+
+# CONFIG GET
+# CONFIG REWRITE
+# CONFIG SET
+# CONFIG RESETSTAT
+
+# DBSIZE
+# DEBUG OBJECT
+# DEBUG SEGFAULT
+
+# DECR
+# DECRBY
+# DEL
+# DISCARD
+# DUMP
+# ECHO
+# EVAL
+# EVALSHA
+# EXEC
+# EXISTS
+# EXPIRE
+# EXPIREAT
+# FLUSHALL
+# FLUSHDB
+
+# GEOADD
+# GEOHASH
+# GEOPOS
+# GEODIST
+# GEORADIUS
+# GEORADIUSBYMEMBER
 
 proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     ## `GET` value from database by key
@@ -353,6 +410,62 @@ proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     ls.inuse = false
     return data[0 .. ^3]
 
+# GETBIT
+# GETRANGE
+# GETSET
+
+# HDEL
+# HEXISTS
+# HGET
+# HGETALL
+# HINCRBY
+# HINCRBYFLOAT
+# HKEYS
+# HLEN
+# HMGET
+# HMSET
+# HSET
+# HSETNX
+# HSTRLEN
+# HVALS
+
+# INCR
+# INCRBY
+# INCRBYFLOAT
+
+# KEYS
+
+# LASTSAVE
+
+# LINDEX
+# LINSERT
+# LLEN
+# LPOP
+# LPUSH
+# LPUSHX
+# LRANGE
+# LREM
+# LSET
+# LTRIM
+
+# MGET
+
+# MIGRATE
+# MONITOR
+# MOVE
+# MSET
+# MSETNX
+# MULTI
+
+# OBJECT
+# PERSIST
+# PEXPIRE
+# PEXPIREAT
+
+# PFADD
+# PFCOUNT
+# PFMERGE
+
 proc PING*(ar: AsyncRedis): Future[bool] {.async.} =
     ## Send `PING` command in order to receive PONG reply signaling
     ## that everything is okay with database server.
@@ -363,6 +476,40 @@ proc PING*(ar: AsyncRedis): Future[bool] {.async.} =
     handleDisconnect(data, ls)
     ls.inuse = false
     return data == "+PONG\r\n"
+
+# PSETEX
+# PSUBSCRIBE
+# PUBSUB
+# PTTL
+# PUBLISH
+# PUNSUBSCRIBE
+
+# QUIT
+
+# RANDOMKEY
+# READONLY
+# READWRITE
+# RENAME
+# RENAMENX
+# RESTORE
+# ROLE
+
+# RPOP
+# RPOPLPUSH
+# RPUSH
+# RPUSHX
+
+# SADD
+# SAVE
+# SCARD
+# SCRIPT DEBUG
+# SCRIPT EXISTS
+# SCRIPT FLUSH
+# SCRIPT KILL
+# SCRIPT LOAD
+# SDIFF
+# SDIFFSTORE
+# SELECT
 
 proc SET*(ar: AsyncRedis, key: string, value: string, ttl: TimeInterval = TimeInterval()): Future[bool] {.async} =
     ## Set value for key
@@ -384,3 +531,59 @@ proc SET*(ar: AsyncRedis, key: string, value: float64, ttl: TimeInterval = TimeI
     ## as a string, Redis have some commands to process numbers.
     let res = await ar.SET(key, $value, ttl)
     return res
+
+# SETBIT
+# SETEX
+# SETNX
+# SETRANGE
+# SHUTDOWN
+# SINTER
+# SINTERSTORE
+# SISMEMBER
+# SLAVEOF
+# SLOWLOG
+# SMEMBERS
+# SMOVE
+# SORT
+# SPOP
+# SRANDMEMBER
+# SREM
+# STRLEN
+# SUBSCRIBE
+# SUNION
+# SUNIONSTORE
+
+# SYNC
+# TIME
+# TTL
+# TYPE
+# UNSUBSCRIBE
+# UNWATCH
+# WAIT
+# WATCH
+
+# ZADD
+# ZCARD
+# ZCOUNT
+# ZINCRBY
+# ZINTERSTORE
+# ZLEXCOUNT
+# ZRANGE
+# ZRANGEBYLEX
+# ZREVRANGEBYLEX
+# ZRANGEBYSCORE
+# ZRANK
+# ZREM
+# ZREMRANGEBYLEX
+# ZREMRANGEBYRANK
+# ZREMRANGEBYSCORE
+# ZREVRANGE
+# ZREVRANGEBYSCORE
+# ZREVRANK
+# ZSCORE
+# ZUNIONSTORE
+
+# SCAN
+# SSCAN
+# HSCAN
+# ZSCAN
