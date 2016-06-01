@@ -4,8 +4,10 @@ import strutils
 import tables
 import unittest
 
-let ar = newAsyncRedis("localhost")
+let ar = newAsyncRedis("localhost", poolSize=1)
 discard waitFor(ar.connect())
+
+echo "CONNECTED"
 
 suite "Async Redis Client testing":
 
@@ -40,6 +42,12 @@ suite "Async Redis Client testing":
             check(waitFor(ar.SET("hello", "world")))
             check(waitFor(ar.BITCOUNT("hello")) == 23)
             check(waitFor(ar.BITCOUNT("hello", 1, 1)) == 6)
+        except UnsupportedError:
+            discard
+
+    test "COMMAND: CLIENT LIST":
+        try:
+            check(waitFor(ar.CLIENT_LIST()).len() >= 1)
         except UnsupportedError:
             discard
 

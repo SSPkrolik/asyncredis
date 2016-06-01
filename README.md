@@ -23,6 +23,7 @@ TODO
 | BGSAVE       | :white_check_mark: |                   |
 | BITCOUNT     | :white_check_mark: |                   |
 | BLPOP        | :red_circle:       |                   |
+| CLIENT LIST  | :white_check_mark: |                   |
 | GET          | :white_check_mark: |                   |
 | PING         | :white_check_mark: |                   |
 | SET          | :white_check_mark: | No TTL            |
