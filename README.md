@@ -34,6 +34,8 @@ TODO
 | CLIENT PAUSE   | :white_check_mark: |                   |
 | CLIENT REPLY   | :white_check_mark: |                   |
 | CLIENT SETNAME | :white_check_mark: |                   |
+| COMMAND        | :red_circle:       |                   |
+| COMMAND COUNT  | :white_check_mark: |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |
 | DUMP           | :white_check_mark: |                   |

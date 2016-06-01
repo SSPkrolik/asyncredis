@@ -23,6 +23,7 @@ suite "Async Redis Client testing":
         try:
             check(waitFor(ar.APPEND("string", "world")) mod 5 == 0)
         except UnsupportedError:
+            echo "[SK] COMMAND: APPEND"
             discard
 
     test "COMMAND: AUTH":
@@ -48,7 +49,7 @@ suite "Async Redis Client testing":
             check(waitFor(ar.BITCOUNT("hello")) == 23)
             check(waitFor(ar.BITCOUNT("hello", 1, 1)) == 6)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: BITCOUNT"
 
     test "COMMAND: BITOP":
         discard waitFor(ar.SET("x", "x"))
@@ -62,37 +63,38 @@ suite "Async Redis Client testing":
             expect AssertionError:
                 check(waitFor(ar.BITOP(BitOperation.NOT, "z", @["x", "y"])) == 1)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: BITOP"
 
     test "COMMAND: CLIENT GETNAME":
         try:
             check(waitFor(ar.CLIENT_GETNAME()) == nil)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: CLIENT GETNAME"
 
     test "COMMAND: CLIENT KILL (old version)":
         try:
             check(waitFor(ar.CLIENT_KILL("localhost", 2999'u16)).success == false)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: CLIENT KILL (old version)"
 
     test "COMMAND: CLIENT KILL (new version)":
         try:
             let filter = newTable({"SKIPME": "yes", "TYPE": "slave"})
             check(waitFor(ar.CLIENT_KILL(filter)) == 0)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: CLIENT KILL (new version)"
 
     test "COMMAND: CLIENT LIST":
         try:
             check(waitFor(ar.CLIENT_LIST()).len() >= 1)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: CLIENT LIST"
 
     test "COMMAND: CLIENT PAUSE":
         try:
             check(waitFor(ar.CLIENT_PAUSE(0)).success)
         except UnsupportedError:
+            echo "[SK] COMMAND: CLIENT PAUSE"
             discard
 
     test "COMMAND: CLIENT REPLY":
@@ -100,6 +102,7 @@ suite "Async Redis Client testing":
             check(waitFor(ar.CLIENT_REPLY(ReplyMode.OFF)).success)
             check(waitFor(ar.CLIENT_REPLY(ReplyMode.ON)).success)
         except UnsupportedError:
+            echo "[SK] COMMAND: CLIENT REPLY"
             discard
 
     test "COMMAND: CLIENT SETNAME":
@@ -107,7 +110,13 @@ suite "Async Redis Client testing":
             check(waitFor(ar.CLIENT_SETNAME("connection")).success)
             check(waitFor(ar.CLIENT_GETNAME()) == "connection")
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: CLIENT SETNAME"
+
+    test "COMMAND: COMMAND COUNT":
+        try:
+            check(waitFor(ar.COMMAND_COUNT()) > 30)
+        except UnsupportedError:
+            echo "[SK] COMMAND: COMMAND COUNT"
 
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
@@ -120,7 +129,7 @@ suite "Async Redis Client testing":
         try:
             check(waitFor(ar.DUMP("hello")).len() == 17)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: DUMP"
 
     test "COMMAND: ECHO":
         check(waitFor(ar.ECHO("hello")) == "hello")
@@ -146,7 +155,7 @@ suite "Async Redis Client testing":
         try:
             check(timeInfoToTime(waitFor(ar.TIME())).toSeconds() > 0)
         except UnsupportedError:
-            discard
+            echo "[SK] COMMAND: TIME"
 
     test "COMMAND: TTL":
         check(waitFor(ar.TTL("non-existing-key")) == ttlDoesNotExist)

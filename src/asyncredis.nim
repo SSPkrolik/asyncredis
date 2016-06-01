@@ -464,6 +464,21 @@ proc CLIENT_SETNAME*(ar: AsyncRedis, name: string): Future[StringStatusReply] {.
 
 # COMMAND
 # COMMAND COUNT
+
+proc COMMAND_COUNT*(ar: AsyncRedis): Future[int64] {.async.} =
+    ## Returns number of supported commands by connected Redis server
+    since((2, 8, 13))
+    let
+        ls = await ar.next()
+        command = "*2\r\n$7\r\nCOMMAND\r\n$5\r\nCOUNT\r\n"
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
 # COMMAND GETKEYS
 # COMMAND INFO
 
