@@ -54,15 +54,15 @@ suite "Async Redis Client testing":
     test "COMMAND: INFO":
         check(waitFor(ar.INFO()).hasKey("redis_version"))
 
-    test "Command: PING":
+    test "COMMAND: PING":
         check(waitFor(ar.PING())== true)
 
-    test "Command: SET":
+    test "COMMAND: SET":
         check(waitFor(ar.SET("string", "world")) == true)
         check(waitFor(ar.SET("int", 5)) == true)
         check(waitFor(ar.SET("float", 5.5)) == true)
 
-    test "Command: GET":
+    test "COMMAND: GET":
         check(waitFor(ar.GET("string")) == "world")
         check(waitFor(ar.GET("int")) == "5")
         check(waitFor(ar.GET("float")) == "5.5")

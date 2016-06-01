@@ -296,6 +296,10 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
         let line = dataStream.readLine().string
         result.add(line)
 
+# CLIENT GETNAME
+# CLIENT PAUSE
+
+
 proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     ## `GET` value from database by key
     let

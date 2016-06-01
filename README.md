@@ -15,15 +15,23 @@ TODO
 
 ## Implementation Status
 
-| Command      | Status             | Notes             |
-|-------------:|:-------------------|:------------------|
-| APPEND       | :white_check_mark: |                   |
-| AUTH         | :white_check_mark: |                   | 
-| BGREWRITEAOF | :white_check_mark: |                   |
-| BGSAVE       | :white_check_mark: |                   |
-| BITCOUNT     | :white_check_mark: |                   |
-| BLPOP        | :red_circle:       |                   |
-| CLIENT LIST  | :white_check_mark: |                   |
-| GET          | :white_check_mark: |                   |
-| PING         | :white_check_mark: |                   |
-| SET          | :white_check_mark: | No TTL            |
+| Command        | Status             | Notes             |
+|---------------:|:-------------------|:------------------|
+| APPEND         | :white_check_mark: |                   |
+| AUTH           | :white_check_mark: |                   | 
+| BGREWRITEAOF   | :white_check_mark: |                   |
+| BGSAVE         | :white_check_mark: |                   |
+| BITCOUNT       | :white_check_mark: |                   |
+| BITFIELD       | :red_circle:       |                   |
+| BITOP          | :red_circle:       |                   |
+| BITPOS         | :red_circle:       |                   |
+| BLPOP          | :red_circle:       |                   |
+| BRPOP          | :red_circle:       |                   |
+| BRPOPLPUSH     | :red_circle:       |                   |
+| CLIENT KILL    | :red_circle:       |                   |
+| CLIENT LIST    | :white_check_mark: |                   |
+| CLIENT GETNAME | :red_circle:       |                   |
+| CLIENT PAUSE   | :red_circle:       |                   |
+| GET            | :white_check_mark: |                   |
+| PING           | :white_check_mark: |                   |
+| SET            | :white_check_mark: | No TTL            |
