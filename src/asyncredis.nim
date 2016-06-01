@@ -365,7 +365,20 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
 # CONFIG SET
 # CONFIG RESETSTAT
 
-# DBSIZE
+proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
+    ## Returns number of keys inside currently selected database
+    let
+        ls = await ar.next()
+        command = "*1\r\n$6\r\nDBSIZE\r\n"
+    ls.inuse = true
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
 # DEBUG OBJECT
 # DEBUG SEGFAULT
 

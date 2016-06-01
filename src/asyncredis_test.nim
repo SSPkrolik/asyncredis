@@ -8,8 +8,6 @@ import unittest
 let ar = newAsyncRedis("localhost", poolSize=1)
 discard waitFor(ar.connect())
 
-echo "CONNECTED"
-
 suite "Async Redis Client testing":
 
     test "Test constructor":
@@ -57,6 +55,9 @@ suite "Async Redis Client testing":
             check(waitFor(ar.CLIENT_LIST()).len() >= 1)
         except UnsupportedError:
             discard
+
+    test "COMMAND: DBSIZE":
+        check(waitFor(ar.DBSIZE()) > 0)
 
     test "COMMAND: INFO":
         check(waitFor(ar.INFO()).hasKey("redis_version"))
