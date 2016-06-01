@@ -13,6 +13,12 @@ suite "Async Redis Client testing":
     test "Test constructor":
         check(ar != nil)
 
+    test "COMMAND: FLUSHALL":
+        check(waitFor(ar.FLUSHALL()).success)
+
+    test "COMMAND: FLUSHDB":
+        check(waitFor(ar.FLUSHDB()).success)
+
     test "COMMAND: APPEND":
         try:
             check(waitFor(ar.APPEND("string", "world")) mod 5 == 0)

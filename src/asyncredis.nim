@@ -422,8 +422,35 @@ proc ECHO*(ar: AsyncRedis, message: string): Future[string] {.async.} =
 # EXISTS
 # EXPIRE
 # EXPIREAT
-# FLUSHALL
-# FLUSHDB
+
+proc FLUSHALL*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
+    ## Removes all keys from server databases
+    let ls = await ar.next()
+    await ls.sock.send("*1\r\n$8\r\nFLUSHALL\r\n")
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    if data == rpOk:
+        return (true, nil)
+    else:
+        return (false, data)
+
+proc FLUSHDB*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
+    ## Removes all keys from currently selected database
+    let ls = await ar.next()
+    await ls.sock.send("*1\r\n$7\r\nFLUSHDB\r\n")
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data == rpOk:
+        return (true, nil)
+    else:
+        return (false, data)
 
 # GEOADD
 # GEOHASH
