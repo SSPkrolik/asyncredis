@@ -59,6 +59,9 @@ suite "Async Redis Client testing":
     test "COMMAND: DBSIZE":
         check(waitFor(ar.DBSIZE()) > 0)
 
+    test "COMMAND: ECHO":
+        check(waitFor(ar.ECHO("hello")) == "hello")
+
     test "COMMAND: INFO":
         check(waitFor(ar.INFO()).hasKey("redis_version"))
 

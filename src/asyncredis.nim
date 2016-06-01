@@ -141,7 +141,6 @@ proc INFO*(ar: AsyncRedis, refresh: bool = false): Future[TableRef[string, strin
     ## information. If `refresh` parameter is set to true, Redis client
     ## info is cached from response.
     let ls = await ar.next()
-    ls.inuse = true
     await ls.sock.send("*1\r\n$4\r\nINFO\r\n")
 
     var data: string = await ls.sock.recvLine()
@@ -196,7 +195,6 @@ proc APPEND*(ar: AsyncRedis, key: string, value: string): Future[int64] {.async.
     let
         ls = await ar.next()
         command = "*3\r\n$$6\r\nAPPEND\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, value.len(), value)
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -210,7 +208,6 @@ proc AUTH*(ar: AsyncRedis, password: string): Future[StringStatusReply] {.async.
     ## and false if not. In that case `lastError` field for the socket is
     ## set to string with error explanation.
     let ls = await ar.next()
-    ls.inuse = true
     await ls.sock.send("*2\r\n$$4\r\nAUTH\r\n$$$#\r\n$#\r\n".format(password.len(), password))
 
     var data: string = await ls.sock.recvLine()
@@ -225,7 +222,6 @@ proc AUTH*(ar: AsyncRedis, password: string): Future[StringStatusReply] {.async.
 proc BGREWRITEAOF*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     ## `BGREWRITEAOF` - rewrite AOF storage file asynchronously
     let ls = await ar.next()
-    ls.inuse = true
     await ls.sock.send("*1\r\n$12\r\nBGREWRITEAOF\r\n")
 
     var data: string = await ls.sock.recvLine()
@@ -240,7 +236,6 @@ proc BGREWRITEAOF*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
 proc BGSAVE*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     ## `BGSAVE` - Save DB in background
     let ls = await ar.next()
-    ls.inuse = true
     await ls.sock.send("*1\r\n$6\r\nBGSAVE\r\n")
 
     var data: string = await ls.sock.recvLine()
@@ -257,7 +252,6 @@ proc BITCOUNT*(ar: AsyncRedis, key: string, indexStart: int = 0, indexEnd: int =
     ## `BITCOUNT` counts number of set bits in value treated as byte stream
     since ((2, 6, 0))
     let ls = await ar.next()
-    ls.inuse = true
     let command = if indexStart == 0 and indexEnd == -1:
                       "*2\r\n$$8\r\nBITCOUNT\r\n$$$#\r\n$#\r\n".format(key.len(), key)
                   else:
@@ -290,7 +284,6 @@ proc CLIENT_GETNAME*(ar: AsyncRedis): Future[string] {.async.} =
     let
         ls = await ar.next()
         command = "*2\r\n$6\r\nCLIENT\r\n$7\r\nGETNAME\r\n"
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -314,7 +307,6 @@ proc CLIENT_LIST*(ar: AsyncRedis): Future[seq[string]] {.async.} =
     let
         ls = await ar.next()
         command = "*2\r\n$6\r\nCLIENT\r\n$4\r\nLIST\r\n"
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -370,7 +362,6 @@ proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
     let
         ls = await ar.next()
         command = "*1\r\n$6\r\nDBSIZE\r\n"
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -388,6 +379,26 @@ proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
 # DISCARD
 # DUMP
 # ECHO
+
+proc ECHO*(ar: AsyncRedis, message: string): Future[string] {.async.} =
+    ## Push message to server and receive it from it, like ping but
+    ## configurable
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$4\r\nECHO\r\n$$$#\r\n$#\r\n".format(message.len(), message)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    let strlen = parseInt(data[1 .. ^1])
+    data = await ls.sock.recv(strlen + 2)
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    return data[0 .. ^3]
+
 # EVAL
 # EVALSHA
 # EXEC
@@ -409,7 +420,6 @@ proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     let
         ls = await ar.next()
         command = "*2\r\n$$3\r\nGET\r\n$$$#\r\n$#\r\n".format(key.len(), key)
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -486,7 +496,6 @@ proc PING*(ar: AsyncRedis): Future[bool] {.async.} =
     ## Send `PING` command in order to receive PONG reply signaling
     ## that everything is okay with database server.
     let ls = await ar.next()
-    ls.inuse = true
     await ls.sock.send("*1\r\n$4\r\nPING\r\n")
     var data: string = await ls.sock.recv(7)
     handleDisconnect(data, ls)
@@ -577,7 +586,6 @@ proc TIME*(ar: AsyncRedis): Future[TimeInfo] {.async.} =
     let
         ls = await ar.next()
         command = "*1\r\n$4\r\nTIME\r\n"
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
@@ -612,7 +620,6 @@ proc TTL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
     let
         ls = await ar.next()
         command = "*2\r\n$$3\r\nTTL\r\n$$$#\r\n$#\r\n".format(key.len(), key)
-    ls.inuse = true
     await ls.sock.send(command)
 
     var data: string = await ls.sock.recvLine()
