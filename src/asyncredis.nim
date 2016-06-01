@@ -14,12 +14,15 @@ const
     rpErr     = "-ERR" # Redis Protocol error reply marker
     rpSuccess = "+"    # Redis Protocol marker for successful command execution
     rpBulk    = "*"    # Redis Protocol marker for bulk string reply
-    rpNewLine = "\r\n"
+    rpNewLine = "\r\n" # Redis Protocol new-line marker
+
+    ttlDoesNotExist* = -2  ## TTL for non-existing key
+    ttlInfinite* = -1      ## TTL for key without expiration time
 
 type
     Architecture* {.pure.} = enum
-        X86
-        X86_64
+        X86    = 0
+        X86_64 = 1
 
     CommunicationError* = object of Exception
         ## Raises on communication problems with MongoDB server
@@ -554,8 +557,58 @@ proc SET*(ar: AsyncRedis, key: string, value: float64, ttl: TimeInterval = TimeI
 # SUNIONSTORE
 
 # SYNC
-# TIME
-# TTL
+
+proc TIME*(ar: AsyncRedis): Future[TimeInfo] {.async.} =
+    ## Returns server time
+    since((2, 6, 0))
+    let
+        ls = await ar.next()
+        command = "*1\r\n$4\r\nTIME\r\n"
+    ls.inuse = true
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    doAssert(parseInt(data[1 .. ^1]) == 2)
+
+    data = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    data = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    let seconds = parseInt(data[1 .. ^1])
+
+    data = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    data = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    let microseconds = parseInt(data[1 .. ^1])
+    result = timeToTimeInfo(fromSeconds(seconds))
+
+proc TTL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
+    ## Returns time-to-live for key:
+    ## -2 for non-existing key
+    ## -1 for key without expiration
+    ## n seconds remaining for key to exit
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$3\r\nTTL\r\n$$$#\r\n$#\r\n".format(key.len(), key)
+    ls.inuse = true
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return parseInt(data[1 .. ^1])
+
+
 # TYPE
 # UNSUBSCRIBE
 # UNWATCH

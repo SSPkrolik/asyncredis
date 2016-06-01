@@ -2,6 +2,7 @@ import asyncdispatch
 import asyncredis
 import strutils
 import tables
+import times
 import unittest
 
 let ar = newAsyncRedis("localhost", poolSize=1)
@@ -73,3 +74,13 @@ suite "Async Redis Client testing":
         check(waitFor(ar.GET("int")) == "5")
         check(waitFor(ar.GET("float")) == "5.5")
         check(waitFor(ar.GET("non-existing-key")) == nil)
+
+    test "COMMAND: TIME":
+        try:
+            check(timeInfoToTime(waitFor(ar.TIME())).toSeconds() > 0)
+        except UnsupportedError:
+            discard
+
+    test "COMMAND: TTL":
+        check(waitFor(ar.TTL("non-existing-key")) == ttlDoesNotExist)
+        check(waitFor(ar.TTL("hello")) == ttlInfinite)

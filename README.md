@@ -37,3 +37,5 @@ TODO
 | GET            | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |
 | SET            | :white_check_mark: | No TTL            |
+| TIME           | :white_check_mark: |                   |
+| TTL            | :white_check_mark: |                   |
