@@ -187,3 +187,8 @@ suite "Async Redis Client testing":
         check: waitFor(ar.SET("hello", "world"))
         check: waitFor(ar.TTL("non-existing-key")) == ttlDoesNotExist
         check: waitFor(ar.TTL("hello")) == ttlInfinite
+
+    test "COMMAND: TYPE":
+        check:
+            waitFor(ar.TYPE("xxxx")) == RedisDataType.None
+            waitFor(ar.TYPE("hello")) == RedisDataType.String

@@ -52,3 +52,4 @@ TODO
 | SET            | :white_check_mark: | No TTL            |
 | TIME           | :white_check_mark: |                   |
 | TTL            | :white_check_mark: |                   |
+| TYPE           | :white_check_mark: |                   |

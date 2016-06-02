@@ -64,6 +64,14 @@ type
     RedisVersion* = tuple[major: int, minor: int, micro: int]
         ## Version of Redis server returned within INFO command reply
 
+    RedisDataType* {.pure.} = enum
+        None
+        String
+        List
+        Set
+        ZSet
+        Hash
+
     AsyncRedis* = ref object of RootObj
         ## Asynchronous Redis client
         host:     string
@@ -90,6 +98,21 @@ type
         ## of the command execution, the second contains response value in
         ## case of execution success, and the third equals to error message
         ## when execution error happened.
+
+proc toRedisType(s: string): RedisDataType =
+    case s
+    of "string":
+        return RedisDataType.String
+    of "list":
+        return RedisDataType.List
+    of "set":
+        return RedisDataType.Set
+    of "zset":
+        return RedisDataType.ZSet
+    of "hash":
+        return RedisDataType.Hash
+    else:
+        return RedisDataType.None
 
 proc `<`*(v1, v2: RedisVersion): bool =
     if v1.major < v2.major:
@@ -896,8 +919,19 @@ proc TTL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
     ls.inuse = false
     return parseInt(data[1 .. ^1])
 
+proc TYPE*(ar: AsyncRedis, key: string): Future[RedisDataType] {.async.} =
+    ## Return type of value stored by the key
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$4\r\nTYPE\r\n$$$#\r\n$#\r\n".format(key.len(), key)
+    await ls.sock.send(command)
 
-# TYPE
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return toRedisType(data[1 .. ^1])
+
 # UNSUBSCRIBE
 # UNWATCH
 # WAIT
