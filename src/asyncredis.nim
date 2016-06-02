@@ -252,10 +252,7 @@ proc AUTH*(ar: AsyncRedis, password: string): Future[StringStatusReply] {.async.
     handleDisconnect(data, ls)
 
     ls.inuse = false
-    if data.startsWith(rpErr):
-        return (false, data)
-    elif data == rpOk:
-        return (true, data)
+    return (data == rpOk, data)
 
 proc BGREWRITEAOF*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     ## `BGREWRITEAOF` - rewrite AOF storage file asynchronously
@@ -364,10 +361,7 @@ proc CLIENT_KILL*(ar: AsyncRedis, address: string, port: uint16): Future[StringS
     handleDisconnect(data, ls)
 
     ls.inuse = false
-    if data == rpOk:
-        return (true, nil)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 proc CLIENT_KILL*(ar: AsyncRedis, filters: TableRef[string, string]): Future[int64] {.async.} =
     ## New method (since Redis 2.8.11) to disconnect clients from server
@@ -419,11 +413,7 @@ proc CLIENT_PAUSE*(ar: AsyncRedis, timeout: uint): Future[StringStatusReply] {.a
     handleDisconnect(data, ls)
 
     ls.inuse = false
-
-    if data == rpOk:
-        return (true, nil)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 proc CLIENT_REPLY*(ar: AsyncRedis, mode: ReplyMode): Future[StringStatusReply] {.async.} = 
     ## Sets reply mode for server and current client
@@ -437,10 +427,7 @@ proc CLIENT_REPLY*(ar: AsyncRedis, mode: ReplyMode): Future[StringStatusReply] {
         var data: string = await ls.sock.recvLine()
         handleDisconnect(data, ls)
         ls.inuse = false
-        if data == rpOk:
-            return (true, nil)
-        else:
-            return (false, data)
+        return (data == rpOk, data)
     else:
         ls.inuse = false
         return (true, nil)
@@ -457,10 +444,7 @@ proc CLIENT_SETNAME*(ar: AsyncRedis, name: string): Future[StringStatusReply] {.
     handleDisconnect(data, ls)
 
     ls.inuse = false
-    if data == rpOk:
-        return (true, nil)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 # CLUSTER ADDSLOTS
 # CLUSTER COUNT-FAILURE-REPORTS
@@ -559,11 +543,7 @@ proc DEBUG_SEGFAULT*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     handleDisconnect(data, ls)
 
     ls.inuse = false
-
-    if data == rpOk:
-        return (true, data)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 proc DECR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
     ## Decrease value stored by the key by 1.
@@ -617,7 +597,20 @@ proc DEL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
     ## Delete single key from database
     result = await ar.DEL(@[key])
 
-# DISCARD
+proc DISCARD*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
+    ## Discard unwatches all keys for current connection after using
+    ## WATCH command
+    since((2, 0, 0))
+    let
+        ls = await ar.next()
+        command = "*1\r\n$7\r\nDISCARD\r\n"
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return (data == rpOk, data)
 
 proc DUMP*(ar: AsyncRedis, key: string): Future[string] {.async.} =
     ## Return value stored in key in Redis-specific serialized format
@@ -670,10 +663,7 @@ proc FLUSHALL*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     handleDisconnect(data, ls)
 
     ls.inuse = false
-    if data == rpOk:
-        return (true, nil)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 proc FLUSHDB*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     ## Removes all keys from currently selected database
@@ -684,11 +674,7 @@ proc FLUSHDB*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     handleDisconnect(data, ls)
 
     ls.inuse = false
-
-    if data == rpOk:
-        return (true, nil)
-    else:
-        return (false, data)
+    return (data == rpOk, data)
 
 # GEOADD
 # GEOHASH

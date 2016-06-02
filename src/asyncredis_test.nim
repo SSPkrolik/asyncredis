@@ -140,6 +140,9 @@ suite "Async Redis Client testing":
             waitFor(ar.DEL("non-existing-key")) == 0
             waitFor(ar.DEL(@["nxk1", "nxk2"])) == 0
 
+    test "COMMAND: DISCARD":
+        check: waitFor(ar.DISCARD()).success == false
+
     test "COMMAND: DUMP":
         try:
             check: waitFor(ar.DUMP("hello")).len() == 17
