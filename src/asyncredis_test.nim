@@ -123,6 +123,12 @@ suite "Async Redis Client testing":
     test "COMMAND: DEBUG SEGFAULT (actually not running it for obvious reasons :))":
         discard
 
+    test "COMMAND: DECR":
+        discard waitFor(ar.SET("x", 10))
+        check:
+            waitFor(ar.DECR("x")).value == 9
+            waitFor(ar.DECR("hello")).success == false
+
     test "COMMAND: DEL":
         check:
             waitFor(ar.DEL("non-existing-key")) == 0

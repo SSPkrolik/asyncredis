@@ -81,9 +81,15 @@ type
         version:    RedisVersion
 
     StringStatusReply* = tuple[success: bool, message: string]
-        ## This reply consists of first field indication success or failure
+        ## This reply consists of first field indicating success or failure
         ## of the command execution, and the second identifies the reason
         ## of failure or description of success received from Redis server.
+
+    IntegerStatusReply* = tuple[success: bool, value: int64, message: string]
+        ## This reply consists of first field indicating success or failure
+        ## of the command execution, the second contains response value in
+        ## case of execution success, and the third equals to error message
+        ## when execution error happened.
 
 proc `<`*(v1, v2: RedisVersion): bool =
     if v1.major < v2.major:
@@ -559,7 +565,23 @@ proc DEBUG_SEGFAULT*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
     else:
         return (false, data)
 
-# DECR
+proc DECR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
+    ## Decrease value stored by the key by 1.
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$4\r\nDECR\r\n$$$#\r\n$#\r\n".format(key.len(), key)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        return (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        return (false, 0.int64, data)
+
 # DECRBY
 
 proc DEL*(ar: AsyncRedis, keys: seq[string]): Future[int64] {.async.} =
