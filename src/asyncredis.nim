@@ -158,7 +158,7 @@ proc newAsyncRedis*(host: string, port: Port = Port(6379), username: string = ni
 proc version*(ar: AsyncRedis): RedisVersion = return ar.version
     ## Return full version of Redis server
 
-template handleDisconnect(response: var string, sock: AsyncLockedSocket) =
+template handleDisconnect(response: var string, ls: AsyncLockedSocket) =
     ## Template for disconnection handling
     if response == "":
         ls.connected = false
@@ -211,11 +211,14 @@ proc connect*(ar: AsyncRedis): Future[bool] {.async.} =
     try:
       await ls.sock.connect(ar.host, ar.port)
       ls.connected = true
-      if not ar.infocached:
-        discard ar.INFO(refresh = true)
-        ar.infocached = true
     except OSError:
       continue
+    if not ar.infocached:
+      try:
+        discard await ar.INFO(refresh = true)
+        ar.infocached = true
+      except CommunicationError:
+        continue
   return any(ar.pool, proc(item: AsyncLockedSocket): bool = item.connected)
 
 proc APPEND*(ar: AsyncRedis, key: string, value: string): Future[int64] {.async.} =
