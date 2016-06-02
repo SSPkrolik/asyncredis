@@ -88,6 +88,12 @@ type
         infocached: bool
         version:    RedisVersion
 
+    Transaction* = ref object
+        ## Transaction is use to perform EXEC/MULTI/WATCH/UNWATCH
+        ## commands in one dedicated connection
+        ls:   AsyncLockedSocket
+        pool: AsyncRedis
+
     StringStatusReply* = tuple[success: bool, message: string]
         ## This reply consists of first field indicating success or failure
         ## of the command execution, and the second identifies the reason
@@ -145,7 +151,10 @@ proc newAsyncLockedSocket(): AsyncLockedSocket =
     sock:          newAsyncSocket()
   )
 
-proc next(ar: AsyncRedis): Future[AsyncLockedSocket] {.async.} =
+proc returnSocket(ar: AsyncRedis, ls: AsyncLockedSocket) =
+    ar.pool.add(ls) 
+
+proc next(ar: AsyncRedis, borrowSocket: bool = false): Future[AsyncLockedSocket] {.async.} =
   ## Retrieves next non-in-use async socket for request
   while true:
     for _ in 0 ..< ar.pool.len():
@@ -158,7 +167,10 @@ proc next(ar: AsyncRedis): Future[AsyncLockedSocket] {.async.} =
           except OSError:
             continue
         ar.pool[ar.current].inuse = true
-        return ar.pool[ar.current]
+        let sockToReturn = ar.pool[ar.current]
+        if borrowSocket:
+            ar.pool.delete(ar.current, ar.current)
+        return sockToReturn
     await sleepAsync(1)
 
 template since(v: RedisVersion): untyped {.immediate.} =
@@ -620,19 +632,15 @@ proc DEL*(ar: AsyncRedis, key: string): Future[int64] {.async.} =
     ## Delete single key from database
     result = await ar.DEL(@[key])
 
-proc DISCARD*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
+proc DISCARD*(t: Transaction): Future[StringStatusReply] {.async.} =
     ## Discard unwatches all keys for current connection after using
     ## WATCH command
-    since((2, 0, 0))
-    let
-        ls = await ar.next()
-        command = "*1\r\n$7\r\nDISCARD\r\n"
-    await ls.sock.send(command)
+    let command = "*1\r\n$7\r\nDISCARD\r\n"
+    await t.ls.sock.send(command)
 
-    var data: string = await ls.sock.recvLine()
-    handleDisconnect(data, ls)
+    var data: string = await t.ls.sock.recvLine()
+    handleDisconnect(data, t.ls)
 
-    ls.inuse = false
     return (data == rpOk, data)
 
 proc DUMP*(ar: AsyncRedis, key: string): Future[string] {.async.} =
@@ -962,3 +970,16 @@ proc TYPE*(ar: AsyncRedis, key: string): Future[RedisDataType] {.async.} =
 # SSCAN
 # HSCAN
 # ZSCAN
+
+proc transaction*(ar: AsyncRedis): Future[Transaction] {.async.} =
+    ## Create new transaction which dedicates locked socket to it
+    result.new()
+    result.ls = await ar.next(borrowSocket = true)
+    result.ls.inuse = true
+    result.pool = ar
+
+proc finish*(t: Transaction) =
+    ## Finish transaction and return socket to pool
+    t.ls.inuse = false
+    t.pool.returnSocket(t.ls)
+

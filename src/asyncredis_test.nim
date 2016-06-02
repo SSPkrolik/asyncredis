@@ -141,7 +141,9 @@ suite "Async Redis Client testing":
             waitFor(ar.DEL(@["nxk1", "nxk2"])) == 0
 
     test "COMMAND: DISCARD":
-        check: waitFor(ar.DISCARD()).success == false
+        let t = waitFor(ar.transaction())
+        check: waitFor(t.DISCARD()).success == false
+        t.finish()
 
     test "COMMAND: DUMP":
         try:
