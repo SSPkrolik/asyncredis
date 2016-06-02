@@ -129,6 +129,12 @@ suite "Async Redis Client testing":
             waitFor(ar.DECR("x")).value == 9
             waitFor(ar.DECR("hello")).success == false
 
+    test "COMMAND: DECRBY":
+        discard waitFor(ar.SET("x", 10))
+        check:
+            waitFor(ar.DECRBY("x", 5)).value == 5
+            waitFor(ar.DECRBY("hello", 6)).success == false
+
     test "COMMAND: DEL":
         check:
             waitFor(ar.DEL("non-existing-key")) == 0

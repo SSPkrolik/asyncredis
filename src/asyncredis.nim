@@ -582,7 +582,22 @@ proc DECR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
     else:
         return (false, 0.int64, data)
 
-# DECRBY
+proc DECRBY*(ar: AsyncRedis, key: string, by: int64): Future[IntegerStatusReply] {.async.} =
+    ## Decrease value stored by the key by 1.
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nDECRBY\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, ($by).len(), by)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        result = (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        result = (false, 0.int64, data)
 
 proc DEL*(ar: AsyncRedis, keys: seq[string]): Future[int64] {.async.} =
     ## Remove specified keys from database
