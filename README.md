@@ -38,6 +38,7 @@ TODO
 | COMMAND COUNT  | :white_check_mark: |                   |
 | DBSIZE         | :white_check_mark: |                   |
 | DEBUG OBJECT   | :white_check_mark: |                   |
+| DEBUG SEGFAULT | :white_check_mark: |                   |
 | DEL            | :white_check_mark: |                   |
 | DUMP           | :white_check_mark: |                   |
 | ECHO           | :white_check_mark: |                   |

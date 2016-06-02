@@ -512,8 +512,6 @@ proc DBSIZE*(ar: AsyncRedis): Future[int64] {.async.} =
     ls.inuse = false
     return parseInt(data[1 .. ^1])
 
-# DEBUG OBJECT
-
 proc DEBUG_OBJECT*(ar: AsyncRedis, key: string): Future[ObjectDebugInfo] {.async.} =
     ## Returns inner Redis debug info for object
     let
@@ -544,7 +542,22 @@ proc DEBUG_OBJECT*(ar: AsyncRedis, key: string): Future[ObjectDebugInfo] {.async
         else:
             discard
 
-# DEBUG SEGFAULT
+proc DEBUG_SEGFAULT*(ar: AsyncRedis): Future[StringStatusReply] {.async.} =
+    ## Makes Redis server to crash
+    let
+        ls = await ar.next()
+        command = "*2\r\n$5\r\nDEBUG\r\n$8\r\nSEGFAULT\r\n"
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data == rpOk:
+        return (true, data)
+    else:
+        return (false, data)
 
 # DECR
 # DECRBY
