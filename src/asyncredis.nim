@@ -756,6 +756,41 @@ proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
 
 # INCR
 # INCRBY
+
+proc INCR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
+    ## Increase value stored by the key by 1.
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$4\r\nINCR\r\n$$$#\r\n$#\r\n".format(key.len(), key)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        result = (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        result = (false, 0.int64, data[5 .. ^1])
+
+proc INCRBY*(ar: AsyncRedis, key: string, by: int64): Future[IntegerStatusReply] {.async.} =
+    ## Decrease value stored by the key by 1.
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nINCRBY\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, ($by).len(), by)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        result = (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        result = (false, 0.int64, data[5 .. ^1])
+
 # INCRBYFLOAT
 
 proc KEYS*(ar: AsyncRedis, pattern: string): Future[seq[string]] {.async.} =

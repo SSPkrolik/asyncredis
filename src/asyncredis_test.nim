@@ -188,6 +188,20 @@ suite "Async Redis Client testing":
             waitFor(ar.GET("float")) == "5.5"
             waitFor(ar.GET("non-existing-key")) == nil
 
+    test "COMMAND: INCR":
+        discard waitFor(ar.SET("x", 10))
+        discard waitFor(ar.SET("hello", "world"))
+        check:
+            waitFor(ar.INCR("x")).value == 11
+            waitFor(ar.INCR("hello")).success == false
+
+    test "COMMAND: INCRBY":
+        discard waitFor(ar.SET("x", 10))
+        discard waitFor(ar.SET("hello", "world"))
+        check:
+            waitFor(ar.INCRBY("x", 5)).value == 15
+            waitFor(ar.INCRBY("hello", 6)).success == false
+
     test "COMMAND: LASTSAVE":
         check: timeInfoToTime(waitFor(ar.LASTSAVE())).toSeconds() > 0
 
