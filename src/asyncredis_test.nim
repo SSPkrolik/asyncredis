@@ -169,8 +169,11 @@ suite "Async Redis Client testing":
     test "COMMAND: INFO":
         check: waitFor(ar.INFO()).hasKey("redis_version")
 
-    test "COMMAND: PING":
-        check: waitFor(ar.PING())== true
+    test "COMMAND: KEYS":
+        discard waitFor(ar.SET("keystest_1", "1"))
+        discard waitFor(ar.SET("keystest_2", "2"))
+        check:
+            waitFor(ar.KEYS("keystest_*")).len() == 2
 
     test "COMMAND: SET":
         check:
@@ -185,11 +188,11 @@ suite "Async Redis Client testing":
             waitFor(ar.GET("float")) == "5.5"
             waitFor(ar.GET("non-existing-key")) == nil
 
-    test "COMMAND: KEYS":
-        discard waitFor(ar.SET("keystest_1", "1"))
-        discard waitFor(ar.SET("keystest_2", "2"))
-        check:
-            waitFor(ar.KEYS("keystest_*")).len() == 2
+    test "COMMAND: LASTSAVE":
+        check: timeInfoToTime(waitFor(ar.LASTSAVE())).toSeconds() > 0
+
+    test "COMMAND: PING":
+        check: waitFor(ar.PING())== true
 
     test "COMMAND: TIME":
         try:

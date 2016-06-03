@@ -784,7 +784,18 @@ proc KEYS*(ar: AsyncRedis, pattern: string): Future[seq[string]] {.async.} =
             result.add(data[0 .. ^3])
         ls.inuse = false
 
-# LASTSAVE
+proc LASTSAVE*(ar: AsyncRedis): Future[TimeInfo] {.async.} =
+    ## Return time of last save performed by Redis server
+    let
+        ls = await ar.next()
+        command = "*1\r\n$8\r\nLASTSAVE\r\n"
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+    return timeToTimeInfo(fromSeconds(parseInt(data[1 .. ^1])))
 
 # LINDEX
 # LINSERT
