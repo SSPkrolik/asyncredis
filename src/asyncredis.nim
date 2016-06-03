@@ -105,6 +105,12 @@ type
         ## case of execution success, and the third equals to error message
         ## when execution error happened.
 
+    FloatStatusReply* = tuple[success: bool, value: float64, message: string]
+        ## This reply consists of first field indicating success of failure
+        ## of the command execution, the second contains response value in
+        ## case of execution success, and the third equals to error message
+        ## when execution error happened.
+
 proc toRedisType(s: string): RedisDataType =
     case s
     of "string":
@@ -791,7 +797,29 @@ proc INCRBY*(ar: AsyncRedis, key: string, by: int64): Future[IntegerStatusReply]
     else:
         result = (false, 0.int64, data[5 .. ^1])
 
-# INCRBYFLOAT
+proc INCRBYFLOAT*(ar: AsyncRedis, key: string, by: float64): Future[FloatStatusReply] {.async.} =
+    ## Increase value stored by the key by floating-point number
+    since((2, 6, 0))
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$11\r\nINCRBYFLOAT\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, ($by).len(), by)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    if data.startsWith(rpErr):
+        ls.inuse = false
+        return (false, 0.0'f64, data[5 .. ^1])
+    else:
+        let strlen = parseInt(data[1 .. ^1])
+
+        data = await ls.sock.recv(strlen + 2)
+        handleDisconnect(data, ls)
+
+        ls.inuse = false
+
+        return (true, parseFloat(data[0 .. ^3]), nil.string)
 
 proc KEYS*(ar: AsyncRedis, pattern: string): Future[seq[string]] {.async.} =
     ## Return all keys from database matching the pattern.

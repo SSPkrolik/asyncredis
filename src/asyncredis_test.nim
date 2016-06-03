@@ -202,6 +202,13 @@ suite "Async Redis Client testing":
             waitFor(ar.INCRBY("x", 5)).value == 15
             waitFor(ar.INCRBY("hello", 6)).success == false
 
+    test "COMMAND: INCRBY":
+        discard waitFor(ar.SET("x", 10))
+        discard waitFor(ar.SET("hello", "world"))
+        check:
+            waitFor(ar.INCRBYFLOAT("x", 5.5)).value == 15.5
+            waitFor(ar.INCRBY("hello", 6)).success == false
+
     test "COMMAND: LASTSAVE":
         check: timeInfoToTime(waitFor(ar.LASTSAVE())).toSeconds() > 0
 
