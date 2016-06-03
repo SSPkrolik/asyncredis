@@ -11,7 +11,28 @@ $ nimble install https://github.com/SSPkrolik/asyncredis.git
 
 ## Usage
 
-TODO
+First, create asynchronous Redis client, and perform connections establishment.
+All connections from pool try to connect to Redis server.
+
+```nim
+import asyncredis
+
+let ar = newAsyncRedis("localhost", poolSize=1)
+discard waitFor(ar.connect())
+```
+
+Asynchronous Redis client performs automated reconnection if disconnection
+happened during certain command execution.
+
+```nim
+proc makeGetSet(): Future[string] {.async.} =
+    discard await ar.SET("key", "value")
+    let val = await ar.GET("key")
+    return val
+
+let res = waitFor(makeGetSet)
+echo res
+```
 
 ## Implementation Status
 
