@@ -758,7 +758,31 @@ proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
 # INCRBY
 # INCRBYFLOAT
 
-# KEYS
+proc KEYS*(ar: AsyncRedis, pattern: string): Future[seq[string]] {.async.} =
+    ## Return all keys from database matching the pattern.
+    result = @[]
+    let
+        ls = await ar.next()
+        command = "*2\r\n$$4\r\nKEYS\r\n$$$#\r\n$#\r\n".format(pattern.len(), pattern)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    let seqlen = parseInt(data[1 .. ^1])
+
+    if seqlen == 0:
+        ls.inuse = false
+    else:
+        for i in 0 .. <seqlen:
+            data = await ls.sock.recvLine()
+            handleDisconnect(data, ls)
+
+            let strlen = parseInt(data[1 .. ^1])
+            data = await ls.sock.recv(strlen + 2)
+            handleDisconnect(data, ls)
+            result.add(data[0 .. ^3])
+        ls.inuse = false
 
 # LASTSAVE
 

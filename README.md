@@ -48,6 +48,7 @@ TODO
 | FLUSHALL       | :white_check_mark: |                   |
 | FLUSHDB        | :white_check_mark: |                   |
 | GET            | :white_check_mark: |                   |
+| KEYS           | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |
 | SET            | :white_check_mark: | No TTL            |
 | TIME           | :white_check_mark: |                   |
