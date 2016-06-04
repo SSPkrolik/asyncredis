@@ -6,7 +6,7 @@ import times
 import unittest
 
 let ar = newAsyncRedis("localhost", poolSize=1)
-discard waitFor(ar.connect())
+require waitFor(ar.connect())
 
 suite "Async Redis Client testing":
 
