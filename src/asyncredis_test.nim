@@ -236,6 +236,10 @@ suite "Async Redis Client testing":
         except UnsupportedError:
             skip()
 
+    test "COMMAND: LRANGE":
+        discard waitFor(ar.LPUSH("rlist", @["x", "y", "z"]))
+        check: waitFor(ar.LRANGE("rlist")).len() == 3
+
     test "COMMAND: PING":
         check: waitFor(ar.PING())== true
 

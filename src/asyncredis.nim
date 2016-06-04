@@ -920,7 +920,31 @@ proc LPUSHX*(ar: AsyncRedis, key: string, value: string): Future[IntegerStatusRe
     else:
         return (false, 0'i64, data[1 .. ^1])
 
-# LRANGE
+proc LRANGE*(ar: AsyncRedis, key: string, start: int64 = 0, stop: int64 = -1): Future[seq[string]] {.async.} =
+    ## Returns subrange from list stored by key
+    result = @[]
+    let
+        ls = await ar.next()
+        command = "*4\r\n$$6\r\nLRANGE\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, ($start).len(), start, ($stop).len(), stop)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    let seqlen = parseInt(data[1 .. ^1])
+    if seqlen == 0:
+        ls.inuse = false
+    else:
+        for i in 0 .. <seqlen:
+            data = await ls.sock.recvLine()
+            handleDisconnect(data, ls)
+
+            let strlen = parseInt(data[1 .. ^1])
+            data = await ls.sock.recv(strlen + 2)
+            handleDisconnect(data, ls)
+            result.add(data[0 .. ^3])
+        ls.inuse = false
+
 # LREM
 # LSET
 # LTRIM

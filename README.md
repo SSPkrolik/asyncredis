@@ -76,6 +76,7 @@ echo res
 | LASTSAVE       | :white_check_mark: |                   |
 | LPUSH          | :white_check_mark: |                   |
 | LPUSHX         | :white_check_mark: |                   |
+| LRANGE         | :white_check_mark: |                   |
 | PING           | :white_check_mark: |                   |
 | SET            | :white_check_mark: | No TTL            |
 | TIME           | :white_check_mark: |                   |
