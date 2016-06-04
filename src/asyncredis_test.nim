@@ -127,7 +127,7 @@ suite "Async Redis Client testing":
             ob.address.startsWith("0x")
 
     test "COMMAND: DEBUG SEGFAULT (actually not running it for obvious reasons :))":
-        discard
+        skip()
 
     test "COMMAND: DECR":
         discard waitFor(ar.SET("x", 10))
