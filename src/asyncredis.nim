@@ -775,7 +775,7 @@ proc INCR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
     if data.startsWith(rpInt):
         result = (true, parseInt(data[1 .. ^1]).int64, nil.string)
     else:
-        result = (false, 0.int64, data[5 .. ^1])
+        result = (false, 0.int64, data[1 .. ^1])
 
 proc INCRBY*(ar: AsyncRedis, key: string, by: int64): Future[IntegerStatusReply] {.async.} =
     ## Decrease value stored by the key by 1.
@@ -792,7 +792,7 @@ proc INCRBY*(ar: AsyncRedis, key: string, by: int64): Future[IntegerStatusReply]
     if data.startsWith(rpInt):
         result = (true, parseInt(data[1 .. ^1]).int64, nil.string)
     else:
-        result = (false, 0.int64, data[5 .. ^1])
+        result = (false, 0.int64, data[1 .. ^1])
 
 proc INCRBYFLOAT*(ar: AsyncRedis, key: string, by: float64): Future[FloatStatusReply] {.async.} =
     ## Increase value stored by the key by floating-point number
@@ -807,7 +807,7 @@ proc INCRBYFLOAT*(ar: AsyncRedis, key: string, by: float64): Future[FloatStatusR
 
     if data.startsWith(rpErr):
         ls.inuse = false
-        return (false, 0.0'f64, data[5 .. ^1])
+        return (false, 0.0'f64, data[1 .. ^1])
     else:
         let strlen = parseInt(data[1 .. ^1])
 
@@ -898,7 +898,28 @@ proc LPUSH*(ar: AsyncRedis, key: string, values: seq[string]): Future[IntegerSta
     else:
         return (false, 0'i64, data[1 .. ^1])
 
-# LPUSHX
+proc LPUSHX*(ar: AsyncRedis, key: string, value: string): Future[IntegerStatusReply] {.async.} =
+    ## Pushes value at the head of the list only if the key exists and
+    ## already holds a list
+    since((2, 2, 0))
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$6\r\nLPUSHX\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, value.len(), value)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        let val = parseInt(data[1 .. ^1]).int64
+        if val == 0:
+            return (false, val , nil.string)
+        return (true, val, nil.string)
+    else:
+        return (false, 0'i64, data[1 .. ^1])
+
 # LRANGE
 # LREM
 # LSET
