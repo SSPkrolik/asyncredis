@@ -760,9 +760,6 @@ proc GET*(ar: AsyncRedis, key: string): Future[string] {.async.} =
 # HSTRLEN
 # HVALS
 
-# INCR
-# INCRBY
-
 proc INCR*(ar: AsyncRedis, key: string): Future[IntegerStatusReply] {.async.} =
     ## Increase value stored by the key by 1.
     let
@@ -865,6 +862,42 @@ proc LASTSAVE*(ar: AsyncRedis): Future[TimeInfo] {.async.} =
 # LLEN
 # LPOP
 # LPUSH
+
+proc LPUSH*(ar: AsyncRedis, key: string, value: string): Future[IntegerStatusReply] {.async.} =
+    ## Pushes new value at the head of the list stored by key
+    let
+        ls = await ar.next()
+        command = "*3\r\n$$5\r\nLPUSH\r\n$$$#\r\n$#\r\n$$$#\r\n$#\r\n".format(key.len(), key, value.len(), value)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        return (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        return (false, 0'i64, data[1 .. ^1])
+
+proc LPUSH*(ar: AsyncRedis, key: string, values: seq[string]): Future[IntegerStatusReply] {.async.} =
+    ## Pushes new values at the head of the list stored by key
+    since((2, 4, 0))
+    let ls = await ar.next()
+    var command = "*$#\r\n$$5\r\nLPUSH\r\n$$$#\r\n$#\r\n".format(2 + values.len(), key.len(), key)
+    for val in values: command &= "$$$#\r\n$#\r\n".format(val.len(), val)
+    await ls.sock.send(command)
+
+    var data: string = await ls.sock.recvLine()
+    handleDisconnect(data, ls)
+
+    ls.inuse = false
+
+    if data.startsWith(rpInt):
+        return (true, parseInt(data[1 .. ^1]).int64, nil.string)
+    else:
+        return (false, 0'i64, data[1 .. ^1])
+
 # LPUSHX
 # LRANGE
 # LREM

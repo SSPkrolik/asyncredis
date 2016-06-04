@@ -212,6 +212,18 @@ suite "Async Redis Client testing":
     test "COMMAND: LASTSAVE":
         check: timeInfoToTime(waitFor(ar.LASTSAVE())).toSeconds() > 0
 
+    test "COMMAND: LPUSH (old, single param)":
+        discard waitFor(ar.SET("slist", "x"))
+        check:
+            waitFor(ar.LPUSH("nolist", "x")).value == 1
+            waitFor(ar.LPUSH("slist", "x")).success == false
+
+    test "COMMAND: LPUSH (new, multi param)":
+        discard waitFor(ar.SET("mlist", "x"))
+        check:
+            waitFor(ar.LPUSH("nolist2", @["x", "y"])).value == 2
+            waitFor(ar.LPUSH("mlist", @["x", "y"])).success == false
+
     test "COMMAND: PING":
         check: waitFor(ar.PING())== true
 
